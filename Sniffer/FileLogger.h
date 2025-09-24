@@ -1,3 +1,6 @@
+#ifndef FILELOG_H
+#define FILELOG_H
+
 #include <fstream>
 
 class FileLog{
@@ -11,3 +14,5 @@ private:
     std::string _path;
     std::ofstream out;
 };
+
+#endif

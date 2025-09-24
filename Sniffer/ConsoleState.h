@@ -1,3 +1,5 @@
+#include <iostream>
+
 class ConsoleState
 {
 public:
@@ -13,10 +15,14 @@ public:
 };
 
 void MenuConsole::display(char choice){
+    std::cout << "================"
+    << "     MENU      "
+    << "=================" << std::endl; 
+
     switch (choice)
     {
     case '1':
-        
+            
         break;
     
     default:

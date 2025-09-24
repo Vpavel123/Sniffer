@@ -1,3 +1,0 @@
-[2025-09-21 00:42:57] Error - Socket error
-[2025-09-21 00:44:15] Error - Socket error
-[2025-09-21 00:44:52] Error - Socket error
