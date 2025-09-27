@@ -6,17 +6,17 @@ RawSocket::RawSocket(Logger& log) : _log(log){
 }
 
 RawSocket::~RawSocket(){
-    Close();
+    shut();
 }
 
-void RawSocket::Socket(){
+void RawSocket::init(){
     raw_socket = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (raw_socket < 0) {
         _log.Error("Socket error");
     }
 }
 
-int RawSocket::Recieve(unsigned char *buffer, size_t lenght, int flag){
+int RawSocket::recieve(unsigned char *buffer, size_t lenght, int flag){
     if (raw_socket < 0) {
         _log.Error("Socket error");
     }
@@ -24,15 +24,15 @@ int RawSocket::Recieve(unsigned char *buffer, size_t lenght, int flag){
     return recvfrom(raw_socket, buffer, lenght, flag, &saddr, &saddr_len);
 }
 
-void RawSocket::Close(){
+void RawSocket::shut(){
     if (raw_socket != -1) {
         close(raw_socket);
         raw_socket = -1;
-        std::cout << "Сокет закрыт" << std::endl;
+        std::cout << "Socket close" << std::endl;
     }
 }
 
-void RawSocket::BindInterface(const std::string& name){
+void RawSocket::bindInterface(const std::string& name){
     if (raw_socket < 0) {
         _log.Error("Socket not initialized for binding");
         return;
@@ -50,11 +50,11 @@ void RawSocket::BindInterface(const std::string& name){
     if (bind(raw_socket, (struct sockaddr*)&interface.sll, sizeof(interface.sll)) < 0) {
         _log.Error("Bind failed for interface " + name);
     } else {
-        _log.Info("Успешно привязан к интерфейсу: " + name);
+        _log.Info("Successfully bound to the interface: {}", name);
     }
 }
 
-void RawSocket::ListInterfaces(){
+void RawSocket::listInterfaces(){
     // Создаем временный сокет только для получения информации об интерфейсах
     int temp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (temp_socket < 0) {
@@ -67,12 +67,12 @@ void RawSocket::ListInterfaces(){
 
     if (ioctl(temp_socket, SIOCGIFCONF, &interface.ifc) < 0) {
         _log.Error("ioctl SIOCGIFCONF");
-        Close();
+        shut();
         return;
     }
 
     int interfaces_count = interface.ifc.ifc_len / sizeof(struct ifreq);
-    _log.Info("Доступные интерфейсы (" + std::to_string(interfaces_count) + "):\n");
+    _log.Info("Available Interfaces ( {} ): ", std::to_string(interfaces_count));
 
     for (int i = 0; i < interfaces_count; ++i) {
         std::string name = interface.ifr[i].ifr_name;
@@ -82,9 +82,9 @@ void RawSocket::ListInterfaces(){
         if (ioctl(temp_socket, SIOCGIFADDR, &ifr_ip) == 0) {
             struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr_ip.ifr_addr;
             std::string ip = inet_ntoa(ipaddr->sin_addr);
-            _log.Info("- " + name + " (" + ip + ")\n");
+            _log.Info(" {} ({})", name, ip);
         } else {
-            _log.Info("- " + name + " (без IP)\n");
+            _log.Info(" {} (without IP)", name);
         }
     }
 

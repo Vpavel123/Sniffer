@@ -34,17 +34,16 @@ public:
         struct sockaddr_ll sll;
     } interface;
 
-
     RawSocket(Logger& log);
     ~RawSocket();
     RawSocket(const RawSocket& order) = delete;
     RawSocket& operator = (const RawSocket& order) = delete;
 
-    void Socket();
-    void BindInterface(const std::string& name);
-    void ListInterfaces();
-    int Recieve(unsigned char *buffer, size_t lenght, int flag);
-    void Close();
+    void init();
+    void bindInterface(const std::string& name);
+    void listInterfaces();
+    int recieve(unsigned char *buffer, size_t lenght, int flag);
+    void shut();
 private:
 };
 

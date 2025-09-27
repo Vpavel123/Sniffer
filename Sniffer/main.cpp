@@ -11,7 +11,8 @@
 #include <net/if.h>
 
 #include "RawSocket.h"
-#include "Packet.h"
+#include "PacketHandler.h"
+#include "PacketProcessor.h"
 
 // Максимальный размер буфера
 #define BUFFER_SIZE 65536
@@ -19,19 +20,32 @@
 int main() {
     Logger& log = Logger::getInstance();
     RawSocket rawSocket(log);
-    PacketHandler packet(log);
-    rawSocket.Socket();
-    std::cout << "Сниффер запущен. Ожидание пакетов..." << std::endl;
-    rawSocket.ListInterfaces();
-    rawSocket.BindInterface("enp0s3");
+    PacketHandler packetHandler;
+    //PacketHandler packet(log);
+    rawSocket.init();
+    log.Info("Сниффер запущен. Ожидание пакетов");
+    rawSocket.listInterfaces();
+    rawSocket.bindInterface("enp0s3");
+    std::unique_ptr<PacketProcessor> processor = std::make_unique<TCPProcessor>(packetHandler);
+
     while (true) {
-        ssize_t data_size = rawSocket.Recieve(packet.getBuffer(), BUFFER_SIZE,0); 
+        ssize_t data_size = rawSocket.recieve(packetHandler.getBuffer(), BUFFER_SIZE,0); 
         if (data_size < 0) {
             log.Error("Recvfrom error");
             break;
         }
+        packetHandler.parseBuffer(packetHandler.getBuffer(), data_size);
+        processor.get()->transmit(packetHandler.IPv4);
         
-        packet.FilterProtocol(TCP);
+        /*if (packetHandler.packet.ethertype == ETH_P_IP)
+        {
+            std::cout << "\n=== TCP Header ===" << std::endl;
+            printf("Source Port: %d\n", ntohs(packetHandler.packet.tcp->source));
+            printf("Destination Port: %d\n", ntohs(packetHandler.packet.tcp->dest));
+            printf("Source IP: %s\n", inet_ntoa(packetHandler.packet.dest_ipv4));
+            printf("Destination IP: %s\n", inet_ntoa(packetHandler.packet.src_ipv4));
+        }*/
+        
     }
     return 0;
 }
