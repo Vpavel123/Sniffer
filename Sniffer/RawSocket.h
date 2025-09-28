@@ -11,6 +11,7 @@
 #include <net/if.h>
 #include <net/ethernet.h>
 #include <netpacket/packet.h>
+#include <vector>
 #include "Log.h"
 
 #include <cstring>
@@ -38,13 +39,12 @@ public:
     ~RawSocket();
     RawSocket(const RawSocket& order) = delete;
     RawSocket& operator = (const RawSocket& order) = delete;
-
     void init();
+    bool checkSocket() const;
     void bindInterface(const std::string& name);
-    void listInterfaces();
+    std::vector<std::string> listInterfaces();
     int recieve(unsigned char *buffer, size_t lenght, int flag);
     void shut();
-private:
 };
 
 #endif

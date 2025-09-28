@@ -9,16 +9,8 @@ Logger::Logger() : _file(new FileLog("log.txt"))
 void Logger::MessageBase(const std::string& log, const std::string& format) {
     std::cout << "[" << getCurrentTime() << "] " << log << " - " << format << std::endl;
 
-    std::string log_text = "[" + getCurrentTime() + "] " + log + " - " + format;
-    
-    std::thread stream_text([this, log_text]() { 
-        mtx.lock();
-            _text = log_text;
-            _file->Init(_text);
-        mtx.unlock();
-    });
-
-    stream_text.join();
+    _text = "[" + getCurrentTime() + "] " + log + " - " + format;
+    _file->Init(_text);
 }
 
 std::string Logger::GetText() const{

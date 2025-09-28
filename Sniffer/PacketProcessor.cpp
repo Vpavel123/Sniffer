@@ -19,14 +19,83 @@ if (_packetHandler.packet.ip_version == 4 && (vers == PacketHandler::IPv4 || ver
     }
 }
 
-void UPDProcessor::transmit(PacketHandler::IPVersion vers){
-    if (_packetHandler.packet.ip_version == vers || vers == PacketHandler::IPv4)
-    {
-            std::cout << "\n=== UDP Header ===" << std::endl;
+void UDPProcessor::transmit(PacketHandler::IPVersion vers){
+    // Проверяем, что это IPv4 пакет и у нас есть UDP заголовок
+    if (_packetHandler.packet.ip_version == 4 && 
+        (vers == PacketHandler::IPv4 || vers == PacketHandler::ANY) &&
+        _packetHandler.packet.udp != nullptr) {
+        
+        std::cout << "\n=== UDP Packet (IPv4) ===" << std::endl;
         printf("Source Port: %d\n", ntohs(_packetHandler.packet.udp->source));
         printf("Destination Port: %d\n", ntohs(_packetHandler.packet.udp->dest));
+        
+        // Проверяем, что IP адреса инициализированы
+        if (_packetHandler.packet.src_ipv4.s_addr != 0) {
+            printf("Source IP: %s\n", inet_ntoa(_packetHandler.packet.src_ipv4));
+        } else {
+            printf("Source IP: N/A\n");
+        }
+        
+        if (_packetHandler.packet.dest_ipv4.s_addr != 0) {
+            printf("Destination IP: %s\n", inet_ntoa(_packetHandler.packet.dest_ipv4));
+        } else {
+            printf("Destination IP: N/A\n");
+        }
+        
+    } else if (_packetHandler.packet.ip_version == 6 && 
+               (vers == PacketHandler::IPv6 || vers == PacketHandler::ANY) &&
+               _packetHandler.packet.udp != nullptr) {
+        
+        std::cout << "\n=== UDP Packet (IPv6) ===" << std::endl;
+        printf("Source Port: %d\n", ntohs(_packetHandler.packet.udp->source));
+        printf("Destination Port: %d\n", ntohs(_packetHandler.packet.udp->dest));
+        
+        char src_ip[INET6_ADDRSTRLEN], dst_ip[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &_packetHandler.packet.src_ipv6, src_ip, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &_packetHandler.packet.dest_ipv6, dst_ip, INET6_ADDRSTRLEN);
+        printf("Source IP: %s\n", src_ip);
+        printf("Destination IP: %s\n", dst_ip);
+        
+    } else {
+        std::cout << "[DEBUG] Invalid UDP packet or missing headers" << std::endl;
     }
 }
+void AllProtocolsProcessor::transmit(PacketHandler::IPVersion vers){
+    // Определяем тип пакета и вызываем соответствующий процессор
+    if (_packetHandler.packet.transport_protocol == IPPROTO_TCP && _packetHandler.packet.tcp != nullptr) {
+        // Создаем временный TCP процессор
+        TCPProcessor tempProcessor(_packetHandler);
+        tempProcessor.transmit(vers);
+    } 
+    else if (_packetHandler.packet.transport_protocol == IPPROTO_UDP && _packetHandler.packet.udp != nullptr) {
+        // Создаем временный UDP процессор
+        UDPProcessor tempProcessor(_packetHandler);
+        tempProcessor.transmit(vers);
+    }
+    else {
+        // Выводим базовую информацию о пакете
+        std::cout << "\n=== Unknown/Other Protocol Packet ===" << std::endl;
+        std::cout << "IP Version: " << (int)_packetHandler.packet.ip_version << std::endl;
+        std::cout << "Protocol: " << (int)_packetHandler.packet.transport_protocol << std::endl;
+        
+        if (_packetHandler.packet.ip_version == 4) {
+            if (_packetHandler.packet.src_ipv4.s_addr != 0) {
+                printf("Source IP: %s\n", inet_ntoa(_packetHandler.packet.src_ipv4));
+            }
+            if (_packetHandler.packet.dest_ipv4.s_addr != 0) {
+                printf("Destination IP: %s\n", inet_ntoa(_packetHandler.packet.dest_ipv4));
+            }
+        }
+        else if (_packetHandler.packet.ip_version == 6) {
+            char src_ip[INET6_ADDRSTRLEN], dst_ip[INET6_ADDRSTRLEN];
+            inet_ntop(AF_INET6, &_packetHandler.packet.src_ipv6, src_ip, INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET6, &_packetHandler.packet.dest_ipv6, dst_ip, INET6_ADDRSTRLEN);
+            printf("Source IP: %s\n", src_ip);
+            printf("Destination IP: %s\n", dst_ip);
+        }
+    }
+}
+
 
 std::unique_ptr<PacketProcessor> PacketProcessorFactory::createProcessor(PacketHandler::Protocol protocol, PacketHandler& packetHandler) {
     switch (protocol) {
@@ -40,82 +109,3 @@ std::unique_ptr<PacketProcessor> PacketProcessorFactory::createProcessor(PacketH
             return std::make_unique<AllProtocolsProcessor>(packetHandler);
     }
 }
-
-
-/*void TCPProcessor::printPacket() {
-    _packetHandler.packet.ipv4 = (struct iphdr*)(_packetHandler.getBuffer() + sizeof(struct ethhdr));
-    _packetHandler.packet.src_addr.s_addr = _packetHandler.packet.ipv4->saddr;
-    _packetHandler.packet.dest_addr.s_addr = _packetHandler.packet.ipv4->daddr;
-
-    _packetHandler.packet.tcp = (struct tcphdr*)(_packetHandler.getBuffer() + sizeof(struct ethhdr) + (_packetHandler.packet.ipv4->ihl * 4));
-    
-    std::cout << "\n=== TCP Header ===" << std::endl;
-    printf("Source Port: %d\n", ntohs(_packetHandler.packet.tcp->source));
-    printf("Destination Port: %d\n", ntohs(_packetHandler.packet.tcp->dest));
-    printf("Source IP: %s\n", inet_ntoa(_packetHandler.packet.src_addr));
-    printf("Destination IP: %s\n", inet_ntoa(_packetHandler.packet.dest_addr));
-}
-
-void TCPProcessor::processPacket(const unsigned char* packet_data, ssize_t data_size){
-    auto a = getPacketHandler().parseBuffer(packet_data, data_size);
-
-    if (a.ipv4 == )
-    {
-        
-    }
-    
-}
-
-TCPProcessor::TCPProcessor() {
-    // Конструктор
-}
-
-TCPProcessor::~TCPProcessor() {
-    // Деструктор
-}
-
-void UDPProcessor::printPacket() {
-    /*_packetHandler.packet.ip = (struct iphdr*)(_packetHandler.getBuffer() + sizeof(struct ethhdr));
-    _packetHandler.packet.src_addr.s_addr = _packetHandler.packet.ip->saddr;
-    _packetHandler.packet.dest_addr.s_addr = _packetHandler.packet.ip->daddr;
-
-    _packetHandler.packet.udp = (struct udphdr*)(_packetHandler.getBuffer() + sizeof(struct ethhdr) + (_packetHandler.packet.ip->ihl * 4));
-    
-    std::cout << "\n=== UDP Header ===" << std::endl;
-    printf("Source Port: %d\n", ntohs(_packetHandler.packet.udp->source));
-    printf("Destination Port: %d\n", ntohs(_packetHandler.packet.udp->dest));
-    printf("Source IP: %s\n", inet_ntoa(_packetHandler.packet.src_addr));
-    printf("Destination IP: %s\n", inet_ntoa(_packetHandler.packet.dest_addr));
-}
-
-UDPProcessor::UDPProcessor() {
-    // Конструктор
-}
-
-UDPProcessor::~UDPProcessor() {
-    // Деструктор
-}
-
-void InternetProtocolProcessor::printPacket() {
-
-}
-
-void InternetProtocolProcessor::InternetPacket(){
-    getPacketHandler().packet.ipv4 = (struct iphdr*)(getPacketHandler().getBuffer() + sizeof(struct ethhdr));
-    getPacketHandler().packet.src_addr.s_addr = packet.ip->saddr;
-    getPacketHandler().packet.dest_addr.s_addr = packet.ip->daddr;
-}
-
-InternetProtocolProcessor::InternetProtocolProcessor() {
-    // Конструктор
-}
-
-InternetProtocolProcessor::~InternetProtocolProcessor() {
-    // Деструктор
-}
-
-uint16_t InternetProtocolProcessor::InternetProtocol(PacketHandler::IPVersion vers) const{
-    return PacketHandler::Packet::ethertype = (uint16_t)vers;
-}*/
-
-

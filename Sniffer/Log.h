@@ -39,7 +39,6 @@ public:
         return instance;
     }
     
-    std::mutex mtx;
     std::string GetText() const;
 
     Logger(const Logger&) = delete;
@@ -57,17 +56,9 @@ void Logger::Message(const std::string& log, const std::string& format, T value,
     } else {
         MessageBase(log, format);
     }
-    
-    std::string log_text = "[" + getCurrentTime() + "] " + log + " - " + format;
-    
-    std::thread stream_text([this, log_text]() { 
-        mtx.lock();
-            _text = log_text;
-            _file->Init(_text);
-        mtx.unlock();
-    });
 
-    stream_text.join();
+    _text = "[" + getCurrentTime() + "] " + log + " - " + format;
+    _file->Init(_text);
 }
 
 inline void Logger::Message(const std::string& log, const std::string& format) {

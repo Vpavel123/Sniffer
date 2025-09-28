@@ -3,6 +3,13 @@
 PacketHandler::Packet PacketHandler::parseBuffer(const unsigned char *packet_data, ssize_t data_size)
 {
     std::memset(&packet, 0, sizeof(packet));
+
+    if (data_size  < sizeof(struct ethhdr))
+    {
+        std::cout << "Packet too small for Ethernet header" << std::endl;
+        return packet;
+    }
+    
     // Парсинг Ethernet заголовка
     packet.eth = (struct ethhdr*)packet_data;
     packet.ethertype = ntohs(packet.eth->h_proto);

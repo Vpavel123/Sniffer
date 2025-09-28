@@ -50,7 +50,7 @@ public:
     };
 
     enum IPVersion{
-        ANY = 1,
+        ANY = 0,
         IPv4 = 4,
         IPv6 = 6
     };

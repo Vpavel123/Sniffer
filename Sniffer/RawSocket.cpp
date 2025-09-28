@@ -16,6 +16,14 @@ void RawSocket::init(){
     }
 }
 
+bool RawSocket::checkSocket() const{
+    if (raw_socket < 0) {
+        _log.Error("Socket error");
+        return false;
+    }
+    return true;
+}
+
 int RawSocket::recieve(unsigned char *buffer, size_t lenght, int flag){
     if (raw_socket < 0) {
         _log.Error("Socket error");
@@ -54,12 +62,12 @@ void RawSocket::bindInterface(const std::string& name){
     }
 }
 
-void RawSocket::listInterfaces(){
+std::vector<std::string> RawSocket::listInterfaces(){
+    std::vector<std::string> _nameInterfaces;
     // Создаем временный сокет только для получения информации об интерфейсах
     int temp_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (temp_socket < 0) {
         _log.Error("Temp socket error");
-        return;
     }
 
     interface.ifc.ifc_len = sizeof(interface.ifr);
@@ -68,25 +76,26 @@ void RawSocket::listInterfaces(){
     if (ioctl(temp_socket, SIOCGIFCONF, &interface.ifc) < 0) {
         _log.Error("ioctl SIOCGIFCONF");
         shut();
-        return;
     }
 
     int interfaces_count = interface.ifc.ifc_len / sizeof(struct ifreq);
-    _log.Info("Available Interfaces ( {} ): ", std::to_string(interfaces_count));
-
+    _log.Info("Available Interfaces ({}): ", std::to_string(interfaces_count));
+    std::string name;
     for (int i = 0; i < interfaces_count; ++i) {
-        std::string name = interface.ifr[i].ifr_name;
+        name = interface.ifr[i].ifr_name;
 
         // Получаем IP-адрес
         struct ifreq ifr_ip = interface.ifr[i];
         if (ioctl(temp_socket, SIOCGIFADDR, &ifr_ip) == 0) {
             struct sockaddr_in* ipaddr = (struct sockaddr_in*)&ifr_ip.ifr_addr;
             std::string ip = inet_ntoa(ipaddr->sin_addr);
-            _log.Info(" {} ({})", name, ip);
+            _log.Info("{}. {} ({})", i + 1, name, ip);    
         } else {
             _log.Info(" {} (without IP)", name);
         }
+        _nameInterfaces.push_back(name);
     }
 
     close(temp_socket);
+    return _nameInterfaces;
 }
