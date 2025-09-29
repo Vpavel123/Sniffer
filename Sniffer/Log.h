@@ -80,4 +80,4 @@ void Logger::Warning(const std::string& message, Args... args){
     Message("Warning", message, args...);
 }
 
-#endif
+#endif // LOG_H

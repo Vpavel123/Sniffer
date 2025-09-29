@@ -1,13 +1,15 @@
 #include "PacketProcessor.h"
 
 void TCPProcessor::transmit(PacketHandler::IPVersion vers){
-if (_packetHandler.packet.ip_version == 4 && (vers == PacketHandler::IPv4 || vers == PacketHandler::ANY)) {
+if (_packetHandler.packet.ip_version == 4 && (vers == PacketHandler::IPv4 || vers == PacketHandler::ANY) &&
+               _packetHandler.packet.tcp != nullptr) {
         std::cout << "\n=== TCP Packet (IPv4) ===" << std::endl;
         printf("Source Port: %d\n", ntohs(_packetHandler.packet.tcp->source));
         printf("Destination Port: %d\n", ntohs(_packetHandler.packet.tcp->dest));
         printf("Source IP: %s\n", inet_ntoa(_packetHandler.packet.src_ipv4));
         printf("Destination IP: %s\n", inet_ntoa(_packetHandler.packet.dest_ipv4));
-    } else if (_packetHandler.packet.ip_version == 6 && (vers == PacketHandler::IPv6 || vers == PacketHandler::ANY)) {
+    } else if (_packetHandler.packet.ip_version == 6 && (vers == PacketHandler::IPv6 || vers == PacketHandler::ANY)&&
+               _packetHandler.packet.tcp != nullptr) {
         std::cout << "\n=== TCP Packet (IPv6) ===" << std::endl;
         printf("Source Port: %d\n", ntohs(_packetHandler.packet.tcp->source));
         printf("Destination Port: %d\n", ntohs(_packetHandler.packet.tcp->dest));
@@ -57,7 +59,7 @@ void UDPProcessor::transmit(PacketHandler::IPVersion vers){
         printf("Destination IP: %s\n", dst_ip);
         
     } else {
-        std::cout << "[DEBUG] Invalid UDP packet or missing headers" << std::endl;
+        std::cout << "Invalid UDP packet or missing headers" << std::endl;
     }
 }
 void AllProtocolsProcessor::transmit(PacketHandler::IPVersion vers){

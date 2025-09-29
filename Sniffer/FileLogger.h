@@ -1,7 +1,9 @@
 #ifndef FILELOG_H
 #define FILELOG_H
 
+#include <iostream>
 #include <fstream>
+#include <mutex>
 
 class FileLog{
 public:
@@ -13,6 +15,7 @@ public:
 private:
     std::string _path;
     std::ofstream out;
+    std::mutex _mutex;
 };
 
-#endif
+#endif // FILELOG_H

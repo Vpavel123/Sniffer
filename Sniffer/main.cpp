@@ -14,18 +14,22 @@
 #include "PacketHandler.h"
 #include "PacketProcessor.h"
 #include "ConsoleState.h"
+#include "Log.h"
 
 // Максимальный размер буфера
 #define BUFFER_SIZE 65536
 
 int main() {
     Logger& log = Logger::getInstance();
+    // Управление сокетом
     RawSocket rawSocket(log);
+    // Обработчик пакетов
     PacketHandler packetHandler;
     rawSocket.init();
     log.Info("Сниффер запущен. Ожидание пакетов");
     int choise;
 
+    // Консольное меню
     Menu menu;
     menu.handleChoice(rawSocket, packetHandler);
 

@@ -24,8 +24,6 @@ public:
     explicit PacketProcessor(PacketHandler& packetHandler) : _packetHandler(packetHandler) {}
     virtual ~PacketProcessor() = default;
     virtual void transmit(PacketHandler::IPVersion vers) = 0;
-    //virtual bool shouldProcessor(PacketHandler::IPVersion vers, PacketHandler::Protocol protocol) = 0;
-protected:
     PacketHandler& _packetHandler;
 };
 
@@ -35,7 +33,6 @@ public:
     explicit TCPProcessor(PacketHandler& packetHandler) : PacketProcessor(packetHandler) {}
     ~TCPProcessor() override = default;
     void transmit(PacketHandler::IPVersion vers) override;
-    //bool shouldProcessor(PacketHandler::IPVersion vers, PacketHandler::Protocol protocol) override;
 };
 
 class UDPProcessor : public PacketProcessor
@@ -44,7 +41,6 @@ public:
     explicit UDPProcessor(PacketHandler& packetHandler) : PacketProcessor(packetHandler) {}
     ~UDPProcessor() override = default;
     void transmit(PacketHandler::IPVersion vers) override;
-    //bool shouldProcessor(PacketHandler::IPVersion vers, PacketHandler::Protocol protocol) override;
 };
 
 class AllProtocolsProcessor : public PacketProcessor
@@ -53,7 +49,6 @@ public:
     explicit AllProtocolsProcessor(PacketHandler& packetHandler) : PacketProcessor(packetHandler) {}
     ~AllProtocolsProcessor() override = default;
     void transmit(PacketHandler::IPVersion vers) override;
-    //bool shouldProcessor(PacketHandler::IPVersion vers, PacketHandler::Protocol protocol) override;
 };
 
 class PacketProcessorFactory{

@@ -1,0 +1,3 @@
+/home/user/C++/Sniffer/CMakeFiles/run_tests.dir
+/home/user/C++/Sniffer/CMakeFiles/edit_cache.dir
+/home/user/C++/Sniffer/CMakeFiles/rebuild_cache.dir
